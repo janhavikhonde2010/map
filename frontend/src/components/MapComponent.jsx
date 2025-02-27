@@ -1,6 +1,9 @@
+// Frontend: MapComponent.jsx
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-defaulticon-compatibility";
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import axios from "axios";
 import "./MapComponent.css";
 
@@ -63,6 +66,48 @@ const MapComponent = () => {
     }
   };
 
+  // const calculateMetrics = async () => {
+  //   if (!startLocation || !destination) {
+  //     setPopupMessage("Select or enter both locations to calculate metrics");
+  //     return;
+  //   }
+  //   try {
+  //     const response = await axios.post("http://localhost:5000/calculate-metrics", {
+  //       start: startLocation,
+  //       destination,
+  //     });
+  //     setArea(response.data.area);
+  //     setDistance(response.data.distance);
+  //     setPopupMessage(`Distance: ${response.data.distance} km, Area: ${response.data.area} sq km`);
+  //   } catch (error) {
+  //     console.error("Error calculating metrics", error);
+  //   }
+  // };
+
+  // const fetchRoute = async () => {
+  //   if (!startLocation || !destination) {
+  //     setPopupMessage("Select or enter both locations to calculate metrics");
+  //     return;
+  //   }
+  //   try {
+  //     const response = await axios.get(
+  //       `https://router.project-osrm.org/route/v1/driving/${startLocation.lng},${startLocation.lat};${destination.lng},${destination.lat}?geometries=geojson`
+  //     );
+
+  //     const coordinates = response.data.routes[0].geometry.coordinates;
+  //     const mappedRoute = coordinates.map((coord) => ({
+  //       lat: coord[1],
+  //       lng: coord[0],
+  //     }));
+
+  //     setRoute(mappedRoute);
+  //     setPopupMessage(`Route calculated successfully`);
+  //   } catch (error) {
+  //     console.error("Error fetching route", error);
+  //     setPopupMessage("Failed to calculate route");
+  //   }
+  // };
+
   const calculateMetrics = async () => {
     if (!startLocation || !destination) {
       setPopupMessage("Select or enter both locations to calculate metrics");
@@ -75,12 +120,37 @@ const MapComponent = () => {
       });
       setArea(response.data.area);
       setDistance(response.data.distance);
-      setRoute([startLocation, destination]);
       setPopupMessage(`Distance: ${response.data.distance} km, Area: ${response.data.area} sq km`);
     } catch (error) {
       console.error("Error calculating metrics", error);
+      setPopupMessage("Failed to calculate metrics");
     }
   };
+  
+  const fetchRoute = async () => {
+    if (!startLocation || !destination) {
+      setPopupMessage("Select or enter both locations to calculate metrics");
+      return;
+    }
+    try {
+      const response = await axios.get(
+        `https://router.project-osrm.org/route/v1/driving/${startLocation.lng},${startLocation.lat};${destination.lng},${destination.lat}?geometries=geojson`
+      );
+  
+      const coordinates = response.data.routes[0].geometry.coordinates;
+      const mappedRoute = coordinates.map((coord) => ({
+        lat: coord[1],
+        lng: coord[0],
+      }));
+  
+      setRoute(mappedRoute);
+      setPopupMessage((prevMessage) => prevMessage + ` | Route calculated successfully`);
+    } catch (error) {
+      console.error("Error fetching route", error);
+      setPopupMessage("Failed to calculate route");
+    }
+  };
+  
 
   return (
     <div className="map-container">
@@ -104,7 +174,13 @@ const MapComponent = () => {
       </div>
       <div className="controls">
         <button className="btn" onClick={switchLocations}>🔄 Switch Locations</button>
-        <button className="btn primary" onClick={calculateMetrics}>📏 Calculate Distance & Area</button>
+        <button className="btn primary" onClick={async () => {
+  await calculateMetrics();  // Wait until metrics calculation completes
+  await fetchRoute();        // Then fetch the route
+}}>
+  📏 Calculate Distance & Area
+</button>
+
         <button className="btn location" onClick={fetchCurrentLocation}>📍 Get Current Location</button>
       </div>
       <p className="message">{popupMessage}</p>
@@ -114,7 +190,7 @@ const MapComponent = () => {
           {startLocation && <Marker position={startLocation}><Popup>Start</Popup></Marker>}
           {destination && <Marker position={destination}><Popup>Destination</Popup></Marker>}
           {currentLocation && <Marker position={currentLocation}><Popup>Current Location</Popup></Marker>}
-          {route.length > 1 && <Polyline positions={route} color="blue" />}
+          {route.length > 0 && <Polyline positions={route} color="blue" />}
           <LocationMarker setLocation={setStartLocation} />
           <LocationMarker setLocation={setDestination} />
         </MapContainer>
