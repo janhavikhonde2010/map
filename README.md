@@ -1,1 +1,1 @@
-https://map-2733-g69o3kmwe-janhavikhonde2010s-projects.vercel.app/
+https://frontend-gpn9n37nz-janhavikhonde2010s-projects.vercel.app/
