@@ -69,7 +69,7 @@ const MapComponent = () => {
       return;
     }
     try {
-      const response = await axios.post("http://localhost:5000/calculate-metrics", {
+      const response = await axios.post("https://backend-6igeoihf8-janhavikhonde2010s-projects.vercel.app/calculate-metrics", {
         start: startLocation,
         destination,
       });
