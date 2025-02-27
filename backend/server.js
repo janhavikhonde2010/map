@@ -6,6 +6,11 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// Default route for checking server status
+app.get("/", (req, res) => {
+    res.send("Backend is running!");
+});
+
 app.post("/calculate-metrics", (req, res) => {
     const { start, destination } = req.body;
 
